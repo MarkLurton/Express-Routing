@@ -1,5 +1,6 @@
 const express = require("express");
 const ExpressError = require("./expressError");
+const { findMean, findMedian, findMode } = require("./helpers");
 
 const app = express();
 
@@ -12,19 +13,19 @@ app.get("/mean", (req, res, next) => {
   try {
     debugger;
     if (!req.query.nums) throw new ExpressError("Nums are required", 400);
-    const nums = req.query.nums.split(",");
-    let sum = 0;
-    for (let num of nums) {
+    const numsString = req.query.nums.split(",");
+    let nums = [];
+    for (let num of numsString) {
       if (isNaN(Number(num))) {
         throw new ExpressError(`${num} is not a number`, 400);
       } else {
-        sum += Number(num);
+        nums.push(Number(num));
       }
     }
-    let mean = sum / nums.length;
+
     return res.json({
       operation: "mean",
-      value: mean,
+      value: findMean(nums),
     });
   } catch (e) {
     next(e);
@@ -44,16 +45,9 @@ app.get("/median", (req, res, next) => {
         nums.push(Number(num));
       }
     }
-    nums.sort();
-    let median;
-    if (nums.length % 2 === 1) {
-      median = nums[Math.floor(nums.length / 2)];
-    } else {
-      median = (nums[nums.length / 2 - 1] + nums[nums.length / 2]) / 2;
-    }
     return res.json({
       operation: "median",
-      value: median,
+      value: findMedian(nums),
     });
   } catch (e) {
     next(e);
@@ -73,23 +67,9 @@ app.get("/mode", (req, res, next) => {
         nums.push(Number(num));
       }
     }
-    const uniqueNums = new Set(nums);
-    let mode;
-    for (let num of uniqueNums) {
-      if (!mode) {
-        mode = num;
-        continue;
-      }
-      if (
-        nums.filter((number) => number == num).length >
-        nums.filter((number) => number == mode).length
-      ) {
-        mode = num;
-      }
-    }
     return res.json({
       operation: "mode",
-      value: mode,
+      value: findMode(nums),
     });
   } catch (e) {
     next(e);
